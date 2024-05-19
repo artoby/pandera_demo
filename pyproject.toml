@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "pandera_demo"
+version = "0.1.0"
+description = "Demo of pandera usage"
+authors = ["Artyom Vorobyov <artyom.vorobyov@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["pandera", "schema", "pandas"]
+classifiers = [
+    "Topic :: Scientific/Engineering",
+]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+pandas = "*"
+pandera = ">= 0.19.3"
+
+pytest = ">= 7.4.0"
+
+[build-system]
+requires = [
+    "poetry-core"
+]
+build-backend = "poetry.core.masonry.api"
