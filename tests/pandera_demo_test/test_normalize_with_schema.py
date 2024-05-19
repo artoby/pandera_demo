@@ -9,4 +9,4 @@ def test_normalize_with_schema():
     raw_price_df = pd.read_csv(price_data_path)
     normalized_price_df = normalize_price_with_schema(raw_price_df)
 
-    assert len(normalized_price_df) == 45
+    assert len(normalized_price_df) == 44

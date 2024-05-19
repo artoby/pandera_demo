@@ -1,37 +1,12 @@
 import pandas as pd
 import numpy as np
-from pandera import Field, SchemaModel, check_types
-from pandera.typing import DataFrame, Index, Series, Category
+from pandera import check_types
+import logging
 
 from pandera_demo.utils.extract_symbols import extract_pair_symbols
 from pandera_demo.utils.schema_helper import get_schema_columns
-
-
-class RawPriceSchema(SchemaModel):
-    index: Index[int] = Field(unique=True)
-    symbol: Series[str] = Field(nullable=True)
-    last_price: Series[np.float64]
-    bid_price: Series[np.float64]
-    ask_price: Series[np.float64]
-    bid_size: Series[np.float64]
-    ask_size: Series[np.float64]
-    volume: Series[np.float64]
-    scrape_timestamp: Series[str]
-
-
-RawPrice = DataFrame[RawPriceSchema]
-
-
-class NormalizedPriceSchema(SchemaModel):
-    index: Index[int] = Field(unique=True)
-    timestamp: Series[np.datetime64]
-    price: Series[np.float32]
-    symbol1: Series[Category]
-    symbol2: Series[Category]
-    volume_24h_sym1: Series[np.float32]
-
-
-NormalizedPrice = DataFrame[NormalizedPriceSchema]
+from pandera_demo.schema.raw_price import RawPrice
+from pandera_demo.schema.normalized_price import NormalizedPrice
 
 
 @check_types
@@ -42,6 +17,12 @@ def normalize_price_with_schema(df_original: RawPrice) -> NormalizedPrice:
             'volume': 'volume_24h_sym1',
         },
     )
+    filter_na_price = df['price'].isna()
+    if filter_na_price.sum() > 0:
+        df = df[~filter_na_price].copy()
+        logging.warning(f'price contains some NaN values, dropping them. '
+                        f'N={filter_na_price.sum():,}, for example: {df[filter_na_price][:2]}')
+
     df['price'] = df['price'].astype(np.float32)
     df['volume_24h_sym1'] = df['volume_24h_sym1'].astype(np.float32)
 
@@ -53,5 +34,8 @@ def normalize_price_with_schema(df_original: RawPrice) -> NormalizedPrice:
     df['symbol2'] = df_original['symbol'].map(map_sym2).astype('category')
 
     df['timestamp'] = pd.to_datetime(df['scrape_timestamp'])
+    df = df.sort_values(by='timestamp')
+
+    df = df[get_schema_columns(NormalizedPrice)]
 
     return df
