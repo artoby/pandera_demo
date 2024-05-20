@@ -5,6 +5,7 @@ from pandera.typing import DataFrame, Index, Series
 
 class RawPriceSchema(SchemaModel):
     index: Index[int] = Field(unique=True)
+    symbol: Series[str]
     last_price: Series[np.float64] = Field(nullable=True)
     bid_price: Series[np.float64]
     ask_price: Series[np.float64]
